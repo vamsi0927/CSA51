@@ -1,0 +1,35 @@
+#include <stdio.h>
+#include <string.h>
+
+#define ROUNDS 16
+
+// Shift schedule as per DES
+int shifts[ROUNDS] = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
+
+// Left circular shift for 28-bit halves (in 32-bit ints)
+unsigned int left_shift_28(unsigned int half, int shifts) {
+    return ((half << shifts) | (half >> (28 - shifts))) & 0x0FFFFFFF;
+}
+
+// Generate subkeys
+void generate_keys(unsigned long long key64) {
+    unsigned int C = (key64 >> 36) & 0x0FFFFFFF;  // upper 28 bits
+    unsigned int D = (key64 >> 8)  & 0x0FFFFFFF;  // lower 28 bits
+
+    for (int i = 0; i < ROUNDS; i++) {
+        C = left_shift_28(C, shifts[i]);
+        D = left_shift_28(D, shifts[i]);
+
+        unsigned long long subkey = ((unsigned long long)C << 28) | D;  // 56-bit intermediate
+        unsigned int K1 = (C >> 4) & 0xFFFFFF;  // first 24 bits from C
+        unsigned int K2 = (D >> 4) & 0xFFFFFF;  // next 24 bits from D
+
+        printf("Subkey %2d: C_part = %06X, D_part = %06X\n", i + 1, K1, K2);
+    }
+}
+
+int main() {
+    unsigned long long key64 = 0x133457799BBCDFF1;  // Sample 64-bit key
+    generate_keys(key64);
+    return 0;
+}
