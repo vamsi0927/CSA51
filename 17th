@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <string.h>
+
+#define ROUNDS 16
+
+// Dummy function to simulate key transformation (in real DES, use PC1/PC2)
+void derive_subkeys(char *key, char subkeys[ROUNDS][48]) {
+    for (int i = 0; i < ROUNDS; i++)
+        for (int j = 0; j < 48; j++)
+            subkeys[i][j] = (key[(i + j) % 64] ^ i) & 1;  // simple xor & wrap-around
+}
+
+void reverse_keys(char keys[ROUNDS][48], char reversed[ROUNDS][48]) {
+    for (int i = 0; i < ROUNDS; i++)
+        memcpy(reversed[i], keys[ROUNDS - 1 - i], 48);
+}
+
+int main() {
+    char key[64] = {0}; // 64-bit key (zero-filled for simplicity)
+    char subkeys[ROUNDS][48], reversed_keys[ROUNDS][48];
+
+    derive_subkeys(key, subkeys);
+    reverse_keys(subkeys, reversed_keys);
+
+    printf("Reversed decryption keys:\n");
+    for (int i = 0; i < ROUNDS; i++) {
+        printf("K%d: ", i + 1);
+        for (int j = 0; j < 48; j++) printf("%d", reversed_keys[i][j]);
+        printf("\n");
+    }
+
+    return 0;
+}
