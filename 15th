@@ -1,0 +1,30 @@
+#include <stdio.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+
+// Function to decrypt the ciphertext with a given shift
+void decrypt(char *ciphertext, int shift, char *plaintext) {
+    for (int i = 0; ciphertext[i]; i++) {
+        if (isalpha(ciphertext[i])) {
+            plaintext[i] = (tolower(ciphertext[i]) - 'a' - shift + ALPHABET_SIZE) % ALPHABET_SIZE + 'a';
+        } else {
+            plaintext[i] = ciphertext[i];
+        }
+    }
+}
+
+// Function to perform frequency attack and output the most likely plaintexts
+void frequencyAttack(char *ciphertext) {
+    char decrypted[1000];
+    for (int shift = 0; shift < ALPHABET_SIZE; shift++) {
+        decrypt(ciphertext, shift, decrypted);
+        printf("Shift %d: %s\n", shift, decrypted);
+    }
+}
+
+int main() {
+    char ciphertext[] = "khoor zruog"; // Example ciphertext
+    frequencyAttack(ciphertext);
+    return 0;
+}
