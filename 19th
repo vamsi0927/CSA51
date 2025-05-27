@@ -1,0 +1,48 @@
+#include <stdio.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8
+#define ROUNDS 3
+
+void xor_blocks(unsigned char *out, unsigned char *in1, unsigned char *in2) {
+    for (int i = 0; i < BLOCK_SIZE; i++)
+        out[i] = in1[i] ^ in2[i];
+}
+
+// Dummy "3DES" function: just reverses bytes 3 times
+void fake_3des_encrypt(unsigned char *block) {
+    for (int r = 0; r < ROUNDS; r++) {
+        for (int i = 0; i < BLOCK_SIZE / 2; i++) {
+            unsigned char tmp = block[i];
+            block[i] = block[BLOCK_SIZE - 1 - i];
+            block[BLOCK_SIZE - 1 - i] = tmp;
+        }
+    }
+}
+
+void encrypt_cbc(unsigned char *plaintext, int len, unsigned char *iv) {
+    unsigned char block[BLOCK_SIZE], prev[BLOCK_SIZE];
+    memcpy(prev, iv, BLOCK_SIZE);
+
+    for (int i = 0; i < len; i += BLOCK_SIZE) {
+        memcpy(block, &plaintext[i], BLOCK_SIZE);
+        xor_blocks(block, block, prev);
+        fake_3des_encrypt(block);
+        memcpy(prev, block, BLOCK_SIZE);
+
+        printf("Cipher block %d: ", i / BLOCK_SIZE);
+        for (int j = 0; j < BLOCK_SIZE; j++)
+            printf("%02X ", block[j]);
+        printf("\n");
+    }
+}
+
+int main() {
+    unsigned char plaintext[16] = "ABCDEFGH12345678";
+    unsigned char iv[BLOCK_SIZE] = "initvect";
+
+    printf("Plaintext: %s\n", plaintext);
+    encrypt_cbc(plaintext, sizeof(plaintext), iv);
+
+    return 0;
+}
