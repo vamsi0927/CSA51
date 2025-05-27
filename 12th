@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <string.h>
+
+int mod26(int x) { return (x % 26 + 26) % 26; }
+
+void hillEncrypt(char *msg, int key[2][2]) {
+    for (int i = 0; msg[i]; i += 2) {
+        int p1 = msg[i] - 'a', p2 = msg[i + 1] - 'a';
+        printf("%c%c", mod26(key[0][0] * p1 + key[0][1] * p2) + 'a',
+                       mod26(key[1][0] * p1 + key[1][1] * p2) + 'a');
+    }
+    printf("\n");
+}
+
+void hillDecrypt(char *cipher, int key[2][2]) {
+    int det = key[0][0] * key[1][1] - key[0][1] * key[1][0], detInv = mod26((det + 26) % 26);
+    int inv[2][2] = {
+        {mod26(key[1][1] * detInv), mod26(-key[0][1] * detInv)},
+        {mod26(-key[1][0] * detInv), mod26(key[0][0] * detInv)}
+    };
+    for (int i = 0; cipher[i]; i += 2) {
+        int c1 = cipher[i] - 'a', c2 = cipher[i + 1] - 'a';
+        printf("%c%c", mod26(inv[0][0] * c1 + inv[0][1] * c2) + 'a',
+                       mod26(inv[1][0] * c1 + inv[1][1] * c2) + 'a');
+    }
+    printf("\n");
+}
+
+int main() {
+    char msg[] = "meetmeattheusualplaceattenratherthaneightoclock";
+    int key[2][2] = {{9, 4}, {5, 7}};
+    
+    // Encryption
+    printf("Encrypted: ");
+    hillEncrypt(msg, key);
+
+    // Decryption
+    char cipher[] = "eicwaywxulwfyhbwjjdtmtuulgpfrdfrkpnqgbq";
+    printf("Decrypted: ");
+    hillDecrypt(cipher, key);
+
+    return 0;
+}
