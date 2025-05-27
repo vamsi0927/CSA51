@@ -1,0 +1,36 @@
+#include <stdio.h>
+#include <string.h>
+
+int mod26(int x) { return (x % 26 + 26) % 26; }
+
+void encryptDecrypt(char *text, int *keyStream, int len, int mode) {
+    for (int i = 0; i < len; i++) {
+        if (text[i] >= 'a' && text[i] <= 'z') {
+            int shift = keyStream[i];
+            text[i] = mod26(text[i] - 'a' + (mode == 0 ? shift : -shift)) + 'a';
+        }
+    }
+}
+
+void findKeyStream(char *cipher, char *plaintext, int *keyStream, int len) {
+    for (int i = 0; i < len; i++) {
+        keyStream[i] = mod26(cipher[i] - plaintext[i]);
+    }
+}
+
+int main() {
+    char plaintext[] = "send more money", ciphertext[] = "lhby ewfj ofbbx";
+    int keyStream[] = {9, 0, 1, 7, 23, 15, 21, 14, 11, 11, 2, 8, 9}; // Key stream
+
+    printf("Ciphertext: ");
+    encryptDecrypt(plaintext, keyStream, strlen(plaintext), 0);  // Encrypt
+    printf("%s\n", plaintext);
+
+    int recoveredKey[13];
+    findKeyStream(ciphertext, "cash not needed", recoveredKey, strlen(ciphertext));
+    printf("Recovered Key Stream: ");
+    for (int i = 0; i < strlen(ciphertext); i++) printf("%d ", recoveredKey[i]);
+    printf("\n");
+
+    return 0;
+}
