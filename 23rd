@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8
+
+// S-DES key schedule, encryption function, and Counter Mode implementation
+unsigned char permute(unsigned char input, unsigned char *perm, int size) {
+    unsigned char output = 0;
+    for (int i = 0; i < size; i++) {
+        if (input & (1 << (perm[i] - 1))) {
+            output |= (1 << i);
+        }
+    }
+    return output;
+}
+
+unsigned char left_shift(unsigned char input, int shift) {
+    return ((input << shift) | (input >> (8 - shift))) & 0xFF;
+}
+
+void key_schedule(unsigned char key, unsigned char *K1, unsigned char *K2) {
+    unsigned char perm1[10] = {3, 5, 2, 7, 4, 10, 1, 9, 8, 6};
+    unsigned char perm2[8] = {6, 3, 7, 4, 8, 5, 10, 9};
+    key = permute(key, perm1, 10);
+    unsigned char left = (key >> 5) & 0x1F, right = key & 0x1F;
+    *K1 = permute((left_shift(left, 1) << 5) | left_shift(right, 1), perm2, 8);
+    *K2 = permute((left_shift(left, 2) << 5) | left_shift(right, 2), perm2, 8);
+}
+
+unsigned char F(unsigned char input, unsigned char K) {
+    unsigned char left = (input >> 4) & 0x0F, right = input & 0x0F;
+    left ^= K;
+    return ((left << 4) | right);
+}
+
+unsigned char sdes_encrypt(unsigned char input, unsigned char K1, unsigned char K2) {
+    unsigned char left = (input >> 4) & 0x0F, right = input & 0x0F;
+    unsigned char round1 = F(input, K1);
+    left ^= (round1 >> 4);
+    right ^= (round1 & 0x0F);
+    return (F((left << 4) | right, K2));
+}
+
+void xor_blocks(unsigned char *input, unsigned char *output, unsigned char *counter, int size) {
+    for (int i = 0; i < size; i++) {
+        output[i] = input[i] ^ counter[i];
+    }
+}
+
+void ctr_mode(unsigned char *input, unsigned char *output, unsigned char key, unsigned char *counter, int size) {
+    unsigned char K1, K2;
+    key_schedule(key, &K1, &K2);
+
+    for (int i = 0; i < size; i++) {
+        unsigned char encrypted_counter[BLOCK_SIZE];
+        encrypted_counter[0] = sdes_encrypt(counter[0], K1, K2);
+        xor_blocks(&input[i * BLOCK_SIZE], &output[i * BLOCK_SIZE], encrypted_counter, BLOCK_SIZE);
+        // Increment the counter for the next block
+        for (int j = BLOCK_SIZE - 1; j >= 0; j--) {
+            if (++counter[j] != 0) break;  // Carry the overflow to the next byte
+        }
+    }
+}
+
+int main() {
+    unsigned char counter[BLOCK_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};  // 0000 0000
+    unsigned char key = 0x1F;  // Binary: 01111 11101
+    unsigned char plaintext[BLOCK_SIZE] = {0x00, 0x01, 0x02, 0x03};  // Binary plaintext 00000001 00100011
+
+    unsigned char ciphertext[BLOCK_SIZE];
+    unsigned char decrypted[BLOCK_SIZE];
+
+    // Encrypt using CTR mode
+    ctr_mode(plaintext, ciphertext, key, counter, 1);
+    printf("Ciphertext: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02X ", ciphertext[i]);
+    }
+    printf("\n");
+
+    // Reset counter for decryption
+    unsigned char counter_decrypt[BLOCK_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    // Decrypt using CTR mode
+    ctr_mode(ciphertext, decrypted, key, counter_decrypt, 1);
+    printf("Decrypted: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02X ", decrypted[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
