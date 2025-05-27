@@ -1,0 +1,54 @@
+#include <stdio.h>
+
+// GCD function
+int gcd(int a, int b) {
+    while (b) {
+        a %= b;
+        int temp = a;
+        a = b;
+        b = temp;
+    }
+    return a;
+}
+
+// Modular inverse using Extended Euclidean Algorithm
+int mod_inverse(int e, int phi_n) {
+    int t = 0, new_t = 1, r = phi_n, new_r = e;
+    while (new_r) {
+        int q = r / new_r;
+        t -= q * new_t;
+        r -= q * new_r;
+        int temp = new_t;
+        new_t = t;
+        t = temp;
+        temp = new_r;
+        new_r = r;
+        r = temp;
+    }
+    return r > 1 ? -1 : (t < 0 ? t + phi_n : t);
+}
+
+// Main function
+int main() {
+    int e = 31, n = 3599, c = 451;  // Public key and ciphertext block
+    int common_factor = gcd(c, n);
+
+    printf("GCD(c, n) = %d\n", common_factor);  // Debugging: show GCD result
+
+    if (common_factor > 1 && common_factor < n) {
+        printf("Common factor found: %d\n", common_factor);
+        int p = common_factor, q = n / p;
+        int phi_n = (p - 1) * (q - 1);
+        printf("Factors of n: p = %d, q = %d\n", p, q);
+        int d = mod_inverse(e, phi_n);
+        if (d != -1) {
+            printf("Private key d = %d\n", d);
+        } else {
+            printf("No modular inverse found for d.\n");
+        }
+    } else {
+        printf("No common factor found\n");
+    }
+
+    return 0;
+}
