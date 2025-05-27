@@ -1,0 +1,32 @@
+#include <stdio.h>
+
+int mod26(int x) { return (x % 26 + 26) % 26; }
+
+void knownPlaintextAttack(int p1[], int c1[], int p2[], int c2[]) {
+    int mat[2][2] = {{p1[0], p1[1]}, {p2[0], p2[1]}};
+    int cipher[2][2] = {{c1[0], c1[1]}, {c2[0], c2[1]}};
+
+    int det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+    int detInv = mod26(det);
+
+    int invMat[2][2] = {
+        {mod26(mat[1][1] * detInv), mod26(-mat[0][1] * detInv)},
+        {mod26(-mat[1][0] * detInv), mod26(mat[0][0] * detInv)}
+    };
+
+    int key[2][2] = {
+        {mod26(invMat[0][0] * cipher[0][0] + invMat[0][1] * cipher[1][0]),
+         mod26(invMat[0][0] * cipher[0][1] + invMat[0][1] * cipher[1][1])},
+        {mod26(invMat[1][0] * cipher[0][0] + invMat[1][1] * cipher[1][0]),
+         mod26(invMat[1][0] * cipher[0][1] + invMat[1][1] * cipher[1][1])}
+    };
+
+    printf("Key Matrix:\n[%d %d]\n[%d %d]\n", key[0][0], key[0][1], key[1][0], key[1][1]);
+}
+
+int main() {
+    int p1[] = {12, 4}, c1[] = {4, 2};  // "me" -> "ec"
+    int p2[] = {19, 7}, c2[] = {24, 1}; // "th" -> "yb"
+    knownPlaintextAttack(p1, c1, p2, c2);
+    return 0;
+}
