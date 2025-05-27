@@ -1,0 +1,36 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void createCipher(char cipher[]) {
+    char used[26] = {0}, keyword[] = "CIPHER";
+    int i, idx = 0;
+
+    for (i = 0; keyword[i]; i++) {
+        int pos = toupper(keyword[i]) - 'A';
+        if (!used[pos]) {
+            cipher[idx++] = 'A' + pos;
+            used[pos] = 1;
+        }
+    }
+
+    for (i = 0; i < 26; i++) {
+        if (!used[i]) cipher[idx++] = 'A' + i;
+    }
+}
+
+char encrypt(char p, char cipher[]) {
+    if (!isalpha(p)) return p;
+    char upper = toupper(p);
+    char c = cipher[upper - 'A'];
+    return islower(p) ? tolower(c) : c;
+}
+
+int main() {
+    char cipher[26], pt[] = "attack at dawn";
+    createCipher(cipher);
+    for (int i = 0; pt[i]; i++)
+        printf("%c", encrypt(pt[i], cipher));
+    printf("\n");
+    return 0;
+}
