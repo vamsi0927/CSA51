@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+#define TOP_N 10
+#define MAX_LEN 1000
+
+// English letter frequency order (most to least frequent)
+char freq_order[] = "etaoinshrdlcumwfgypbvkjxqz";
+
+// Count frequencies in ciphertext
+void count_freq(const char *text, int *freq) {
+    for (int i = 0; text[i]; i++)
+        if (isalpha(text[i])) freq[tolower(text[i]) - 'a']++;
+}
+
+// Compare function for sorting letters by frequency
+int compare(const void *a, const void *b) {
+    return ((int *)b)[0] - ((int *)a)[0];  // Descending
+}
+
+// Attempt decryption using frequency mapping
+void decrypt(char *cipher, char *mapping, char *result) {
+    for (int i = 0; cipher[i]; i++) {
+        if (isalpha(cipher[i])) {
+            int idx = tolower(cipher[i]) - 'a';
+            char sub = mapping[idx];
+            result[i] = isupper(cipher[i]) ? toupper(sub) : sub;
+        } else result[i] = cipher[i];
+    }
+}
+
+// Main logic
+int main() {
+    char cipher[MAX_LEN] = "wklv lv d whvw phvvdjh iru dwwdfn";  // Encrypted Caesar-like monoalpha
+    int freq[26] = {0}, pairs[26][2];  // [letter_index, count]
+    char mapping[26], result[MAX_LEN];
+
+    count_freq(cipher, freq);
+
+    for (int i = 0; i < 26; i++) {
+        pairs[i][0] = i;         // letter index
+        pairs[i][1] = freq[i];   // frequency
+    }
+
+    qsort(pairs, 26, sizeof(pairs[0]), compare);  // Sort by freq desc
+
+    // Build simple substitution mapping based on frequency rank
+    for (int i = 0; i < 26; i++)
+        mapping[pairs[i][0]] = freq_order[i];
+
+    decrypt(cipher, mapping, result);
+
+    printf("Likely decryption based on frequency:\n%s\n", result);
+    return 0;
+}
