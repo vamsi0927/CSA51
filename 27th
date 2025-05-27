@@ -1,0 +1,37 @@
+#include <stdio.h>
+#include <math.h>
+
+// Function to compute modular exponentiation (a^b) % n
+int mod_exp(int a, int b, int n) {
+    int result = 1;
+    while (b > 0) {
+        if (b % 2 == 1)
+            result = (result * a) % n;
+        a = (a * a) % n;
+        b /= 2;
+    }
+    return result;
+}
+
+// RSA Encryption function
+int rsa_encrypt(int m, int e, int n) {
+    return mod_exp(m, e, n);
+}
+
+int main() {
+    // Public key (e, n)
+    int e = 31; // Public exponent
+    int n = 3599; // Modulus n = pq (for simplicity)
+
+    // Example plaintext (message): A = 0, B = 1, ..., Z = 25
+    int message[] = {0, 1, 2, 3, 4}; // "ABCDE" in numbers (0-25)
+
+    // Encrypt each character of the message
+    int ciphertext[5];
+    for (int i = 0; i < 5; i++) {
+        ciphertext[i] = rsa_encrypt(message[i], e, n);
+        printf("Encrypted message[%d]: %d\n", i, ciphertext[i]);
+    }
+
+    return 0;
+}
