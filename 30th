@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+#define BLOCK_SIZE 8  // Example block size for the cipher (8 bytes = 64 bits)
+
+// Simple block cipher encryption (XOR-based for illustration)
+void block_cipher(uint8_t *input, uint8_t *key, uint8_t *output) {
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        output[i] = input[i] ^ key[i];
+    }
+}
+
+// CBC-MAC algorithm (key is used to encrypt the message)
+void cbc_mac(uint8_t *message, size_t message_len, uint8_t *key, uint8_t *mac) {
+    uint8_t prev_block[BLOCK_SIZE] = {0};  // Initialize with zero IV
+    uint8_t current_block[BLOCK_SIZE];
+    size_t num_blocks = message_len / BLOCK_SIZE;
+
+    for (size_t i = 0; i < num_blocks; i++) {
+        // Copy the current block from the message
+        memcpy(current_block, message + i * BLOCK_SIZE, BLOCK_SIZE);
+
+        // XOR with previous ciphertext (or IV for the first block)
+        for (int j = 0; j < BLOCK_SIZE; j++) {
+            current_block[j] ^= prev_block[j];
+        }
+
+        // Encrypt the current block using block cipher (simulated XOR)
+        block_cipher(current_block, key, prev_block);
+    }
+
+    // The final value of prev_block is the MAC
+    memcpy(mac, prev_block, BLOCK_SIZE);
+}
+
+// Function to simulate the attack by creating X || (X ⊕ T)
+void attack(uint8_t *message, size_t message_len, uint8_t *mac, uint8_t *attacked_message) {
+    // Create the modified message X || (X ⊕ T)
+    for (size_t i = 0; i < message_len; i++) {
+        attacked_message[i] = message[i];  // Copy original message
+    }
+    for (size_t i = 0; i < BLOCK_SIZE; i++) {
+        attacked_message[message_len + i] = message[i] ^ mac[i];  // Append X ⊕ T
+    }
+}
+
+int main() {
+    uint8_t key[BLOCK_SIZE] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};  // Example key
+    uint8_t message[BLOCK_SIZE] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};  // Example message
+    uint8_t mac[BLOCK_SIZE];  // Store the CBC-MAC result
+    uint8_t attacked_message[2 * BLOCK_SIZE];  // Store the attacked message
+
+    // Compute the CBC-MAC for the original message
+    cbc_mac(message, BLOCK_SIZE, key, mac);
+    printf("Original Message: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02X ", message[i]);
+    }
+    printf("\nMAC (T): ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02X ", mac[i]);
+    }
+    printf("\n");
+
+    // Perform the attack: Create X || (X ⊕ T)
+    attack(message, BLOCK_SIZE, mac, attacked_message);
+
+    // Compute the CBC-MAC for the attacked message (X || (X ⊕ T))
+    uint8_t attacked_mac[BLOCK_SIZE];
+    cbc_mac(attacked_message, 2 * BLOCK_SIZE, key, attacked_mac);
+
+    // Output the attacked message and its MAC
+    printf("Attacked Message (X || X⊕T): ");
+    for (int i = 0; i < 2 * BLOCK_SIZE; i++) {
+        printf("%02X ", attacked_message[i]);
+    }
+    printf("\nAttacked MAC: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02X ", attacked_mac[i]);
+    }
+    printf("\n");
+
+    // Check if the CBC-MACs match
+    if (memcmp(mac, attacked_mac, BLOCK_SIZE) == 0) {
+        printf("Attack successful! The CBC-MACs match.\n");
+    } else {
+        printf("The CBC-MACs do not match.\n");
+    }
+
+    return 0;
+}
