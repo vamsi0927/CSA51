@@ -1,0 +1,36 @@
+ #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+char matrix[5][5] = {
+    {'P','L','A','Y','F'},
+    {'I','R','E','X','M'},
+    {'B','C','D','G','H'},
+    {'K','N','O','Q','S'},
+    {'T','U','V','W','Z'}
+};
+
+void findPos(char c, int *x, int *y) {
+    for (int i = 0; i < 5; i++)
+        for (int j = 0; j < 5; j++)
+            if (matrix[i][j] == c) {*x = i; *y = j;}
+}
+
+void encryptPair(char a, char b) {
+    int x1, y1, x2, y2;
+    findPos(a, &x1, &y1);
+    findPos(b, &x2, &y2);
+    if (x1 == x2)
+        printf("%c%c", matrix[x1][(y1+1)%5], matrix[x2][(y2+1)%5]);
+    else if (y1 == y2)
+        printf("%c%c", matrix[(x1+1)%5][y1], matrix[(x2+1)%5][y2]);
+    else
+        printf("%c%c", matrix[x1][y2], matrix[x2][y1]);
+}
+
+int main() {
+    char text[] = "HELLO";
+    for (int i = 0; text[i]; i += 2)
+        encryptPair(text[i], text[i+1] ? text[i+1] : 'X');
+    return 0;
+}
