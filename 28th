@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <math.h>
+
+// Function to perform modular exponentiation
+long long mod_exp(long long base, long long exp, long long mod) {
+    long long result = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1) {
+            result = (result * base) % mod;
+        }
+        base = (base * base) % mod;
+        exp /= 2;
+    }
+    return result;
+}
+
+int main() {
+    long long p = 23;  // A small prime number for simplicity
+    long long a = 5;   // Primitive root modulo p
+
+    // Alice's private key
+    long long x_A = 6;
+    long long A = mod_exp(a, x_A, p);  // Alice's public key
+    printf("Alice's public key: %lld\n", A);
+
+    // Bob's private key
+    long long x_B = 15;
+    long long B = mod_exp(a, x_B, p);  // Bob's public key
+    printf("Bob's public key: %lld\n", B);
+
+    // Now Alice and Bob exchange their public keys (A, B) and compute the shared secret.
+    long long shared_secret_Alice = mod_exp(B, x_A, p);  // Alice computes the shared key
+    long long shared_secret_Bob = mod_exp(A, x_B, p);    // Bob computes the shared key
+
+    printf("Alice's computed shared secret: %lld\n", shared_secret_Alice);
+    printf("Bob's computed shared secret: %lld\n", shared_secret_Bob);
+
+    if (shared_secret_Alice == shared_secret_Bob) {
+        printf("The shared secret is: %lld\n", shared_secret_Alice);
+    } else {
+        printf("Error: Shared secret mismatch\n");
+    }
+
+    return 0;
+}
