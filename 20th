@@ -1,0 +1,41 @@
+#include <stdio.h>
+#include <string.h>
+#define B 8
+
+void x(unsigned char *o, unsigned char *a, unsigned char *b) {
+    for (int i = 0; i < B; i++) o[i] = a[i] ^ b[i];
+}
+
+void enc(unsigned char *in, unsigned char *out) {
+    for (int i = 0; i < B; i++) out[i] = in[i] ^ 0xAA;
+}
+
+void dec(unsigned char *in, unsigned char *out) {
+    enc(in, out);  // same as enc
+}
+
+void show(char *mode, unsigned char ct[3][B], unsigned char *iv) {
+    unsigned char out[B], prev[B]; memcpy(prev, iv, B);
+    printf("\n%s Decryption:\n", mode);
+    for (int i = 0; i < 3; i++) {
+        dec(ct[i], out);
+        if (!strcmp(mode, "CBC")) x(out, out, prev);
+        printf("P%d: %.8s\n", i + 1, out);
+        memcpy(prev, ct[i], B);
+    }
+}
+
+int main() {
+    unsigned char pt[3][B] = {"Block1A", "Block2B", "Block3C"}, ct[3][B], tmp[B], iv[B] = {0}, p[B];
+    memcpy(p, iv, B);
+    for (int i = 0; i < 3; i++) { x(tmp, pt[i], p); enc(tmp, ct[i]); memcpy(p, ct[i], B); }
+
+    ct[1][0] ^= 1;  // simulate error in C2
+    show("CBC", ct, iv);
+
+    for (int i = 0; i < 3; i++) enc(pt[i], ct[i]);
+    ct[1][0] ^= 1;  // simulate error in C2
+    show("ECB", ct, iv);
+
+    return 0;
+}
