@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <math.h>
+
+// Function to compute gcd of two numbers
+int gcd(int a, int b) {
+    while (b) {
+        a %= b;
+        int temp = a;
+        a = b;
+        b = temp;
+    }
+    return a;
+}
+
+// Function to compute modular inverse of a with respect to n
+int mod_inverse(int a, int n) {
+    int t = 0, new_t = 1, r = n, new_r = a;
+    while (new_r) {
+        int q = r / new_r;
+        t -= q * new_t;
+        r -= q * new_r;
+        int temp = new_t;
+        new_t = t;
+        t = temp;
+        temp = new_r;
+        new_r = r;
+        r = temp;
+    }
+    return r > 1 ? -1 : (t < 0 ? t + n : t);
+}
+
+// Function to compute power (a^b) % n
+int mod_exp(int a, int b, int n) {
+    int result = 1;
+    while (b > 0) {
+        if (b % 2 == 1) {
+            result = (result * a) % n;
+        }
+        a = (a * a) % n;
+        b /= 2;
+    }
+    return result;
+}
+
+// Function to encrypt the message using RSA
+int encrypt(int message, int e, int n) {
+    return mod_exp(message, e, n);
+}
+
+// Function to decrypt the ciphertext using RSA
+int decrypt(int ciphertext, int d, int n) {
+    return mod_exp(ciphertext, d, n);
+}
+
+int main() {
+    // Example public and private key values
+    int p = 61, q = 53;  // Two prime numbers
+    int n = p * q;       // Modulus
+    int phi_n = (p - 1) * (q - 1);  // Euler's totient function
+    int e = 31;  // Public exponent
+    int d = mod_inverse(e, phi_n);  // Private exponent
+
+    // Display public and private keys
+    printf("Public Key (e, n) = (%d, %d)\n", e, n);
+    printf("Private Key (d, n) = (%d, %d)\n", d, n);
+
+    // Message to encrypt
+    int message = 65;  // ASCII value of 'A'
+
+    // Encrypting the message
+    int ciphertext = encrypt(message, e, n);
+    printf("Encrypted message: %d\n", ciphertext);
+
+    // Decrypting the message
+    int decrypted_message = decrypt(ciphertext, d, n);
+    printf("Decrypted message: %d (ASCII: %c)\n", decrypted_message, decrypted_message);
+
+    return 0;
+}
