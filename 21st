@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <string.h>
+#define B 8
+
+void x(unsigned char *o, unsigned char *a, unsigned char *b) {
+    for (int i = 0; i < B; i++) o[i] = a[i] ^ b[i];
+}
+
+void e(unsigned char *in, unsigned char *out) {
+    for (int i = 0; i < B; i++) out[i] = in[i] ^ 0xAA;
+}
+
+int pad(unsigned char *m, int l) {
+    int p = B - (l % B); m[l] = 0x80;
+    for (int i = 1; i < p; i++) m[l + i] = 0x00;
+    return l + p;
+}
+
+void ECB(unsigned char *m, int l) {
+    printf("\nECB:\n");
+    for (int i = 0; i < l; i += B) {
+        unsigned char o[B]; e(m + i, o); printf("%.8s\n", o);
+    }
+}
+
+void CBC(unsigned char *m, int l) {
+    printf("\nCBC:\n");
+    unsigned char iv[B] = {0}, o[B];
+    for (int i = 0; i < l; i += B) {
+        x(o, m + i, iv); e(o, o); memcpy(iv, o, B); printf("%.8s\n", o);
+    }
+}
+
+void CFB(unsigned char *m, int l) {
+    printf("\nCFB:\n");
+    unsigned char iv[B] = {0}, o[B], t[B];
+    for (int i = 0; i < l; i += B) {
+        e(iv, t); x(o, m + i, t); memcpy(iv, o, B); printf("%.8s\n", o);
+    }
+}
+
+int main() {
+    unsigned char msg[64] = "HELLOCRYPTO", buf[64];
+    int len = pad(memcpy(buf, msg, strlen((char *)msg)), strlen((char *)msg));
+    ECB(buf, len); CBC(buf, len); CFB(buf, len);
+    return 0;
+}
