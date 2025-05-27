@@ -1,0 +1,19 @@
+#include <stdio.h>
+#include <ctype.h>
+
+void caesar(char *text, int key) {
+    for (int i = 0; text[i]; i++) {
+        if (isalpha(text[i])) {
+            char base = isupper(text[i]) ? 'A' : 'a';
+            text[i] = (text[i] - base + key) % 26 + base;
+        }
+    }
+}
+
+int main() {
+    char text[100] = "HELLO WORLD";
+    int key = 3;
+    caesar(text, key);
+    printf("Encrypted: %s\n", text);
+    return 0;
+}
