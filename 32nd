@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdint.h>
+
+// Mockup DSA parameters
+#define P 23   // A small prime number (in reality, these would be much larger)
+#define Q 11   // A smaller prime divisor of P-1
+#define G 4    // A primitive root modulo P
+
+// Function to calculate modular exponentiation (base^exp % mod)
+uint32_t mod_exp(uint32_t base, uint32_t exp, uint32_t mod) {
+    uint32_t result = 1;
+    base = base % mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) {
+            result = (result * base) % mod;
+        }
+        exp = exp >> 1;  // Divide exponent by 2
+        base = (base * base) % mod;
+    }
+    return result;
+}
+
+// Function to generate a random 'k' (in real implementations, 'k' should be kept secret)
+uint32_t generate_k() {
+    return rand() % (Q - 1) + 1; // 'k' should be in the range [1, Q-1]
+}
+
+// DSA signature generation (mockup)
+void generate_signature(uint32_t private_key, uint32_t message_hash, uint32_t *r, uint32_t *s) {
+    uint32_t k = generate_k();  // Random number for signature
+    *r = mod_exp(G, k, P) % Q;  // r = (G^k mod P) % Q
+    *s = ((private_key * *r) + (k * message_hash)) % Q;  // s = (private_key * r + k * message_hash) % Q
+}
+
+// Display signature
+void print_signature(uint32_t r, uint32_t s) {
+    printf("Signature: (r, s) = (%u, %u)\n", r, s);
+}
+
+int main() {
+    // Seed the random number generator
+    srand(time(NULL));
+
+    uint32_t private_key = 6;  // In real implementation, this should be secret
+    uint32_t message_hash = 9; // Hash of the message (for simplicity, using a small number)
+
+    // Generate signature for the first message
+    uint32_t r1, s1;
+    generate_signature(private_key, message_hash, &r1, &s1);
+    printf("Signature for first message:\n");
+    print_signature(r1, s1);
+
+    // Generate signature for the second message (same message, different k)
+    uint32_t r2, s2;
+    generate_signature(private_key, message_hash, &r2, &s2);
+    printf("Signature for second message (same message, different k):\n");
+    print_signature(r2, s2);
+
+    // Check if the signatures are different
+    if (r1 != r2 || s1 != s2) {
+        printf("\nThe signatures differ because a new random 'k' was used each time.\n");
+    } else {
+        printf("\nThe signatures are the same (this would not happen in DSA due to different 'k').\n");
+    }
+
+    return 0;
+}
